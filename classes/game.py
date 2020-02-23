@@ -1,6 +1,6 @@
 import random
 
-import card, player
+from classes import player
 
 
 class ClassGame:
@@ -104,13 +104,12 @@ class ClassGame:
 
     def __draw_card(self, deck, card_index=None):  # draw card from deck
         if isinstance(card_index, int):
-            print("ENTERED THIS FUNCTION")
             cards_in_deck = len(deck)
 
             if cards_in_deck > 1:
                 drawn_card = deck.pop(card_index)
 
-            else:
+            else:  # last car in deck
                 drawn_card = deck.pop(0)
 
             return deck, drawn_card
@@ -144,94 +143,67 @@ class ClassGame:
                 drawn_card = self.draw_card_deck_districts()
                 player.cards.append(drawn_card)
 
-    def temp(self):
-        from pprint import pprint
+    def __remove_characters_for_round(self, characters):  # remove characters for this round
+        characters_removed = []
 
-        # get deck with character cards
-        # for character in self.__deck_characters:
-        #     pprint(character.info)
+        for index in range(self.__characters_unused):
+            random.shuffle(characters)  # shuffle deck
+            characters, drawn_card = self.__draw_card(characters)
+            characters_removed.append(drawn_card)
 
-        # print("--------------------------------------------------------")
+        return characters_removed
 
+    def __prepare_pickable_characters(self):
         # remove king from deck with characters
         characters = list(filter(lambda x: x.name != "King", self.__deck_characters))
         character_king = list(filter(lambda x: x.name == "King", self.__deck_characters))[0]
 
-        for character in characters:
-            pprint(character.info)
-
-        print("--------------------------------------------------------")
-
-        pprint(character_king.info)
-        print("--------------------------------------------------------")
-
-        # check how many open cards
-        print(self.__characters_unused)
-        print("--------------------------------------------------------")
-
-        # remove characters for this round
-        characters_removed = []
-
-        for index in range(self.__characters_unused):
-            random.shuffle(characters)
-
-            characters, drawn_card = self.__draw_card(characters)
-
-            characters_removed.append(drawn_card)
+        # get removed characters for this round
+        characters_removed = self.__remove_characters_for_round(characters)
 
         # add king back to pickable characters
         characters.append(character_king)
 
-        # save these cards
-        self.__deck_characters = characters
+        return characters, characters_removed
 
-        print("--------------------------------------------------------")
+    def __get_index_character(self, order_number):
+        for index_character in range(len(self.__deck_characters)):  # go through each character
+            if self.__deck_characters[index_character].order == order_number:  # find character with given order number
+                return index_character  # return character index
 
-        print("Characters the players can choose from:")
-        for character in self.__deck_characters:
-            pprint(character.info)
+    def set_character_per_player(self):
+        from pprint import pprint
 
-        print("--------------------------------------------------------")
+        # prepare character picking
+        self.__deck_characters, characters_removed = self.__prepare_pickable_characters()
 
         print("Characters removed for this round:")
         for character in characters_removed:
             pprint(character.info)
 
-        # check how many character cards per player
-        print(self.__characters_per_player)
-        print("--------------------------------------------------------")
-
         # check who is king at the moment
         current_king = list(filter(lambda x: x.flag_king == True, self.__players))[0]
-        pprint(current_king.info)
-
-        index_king = current_king.index
-        # print(index_king)
 
         # establish choosing order
-        # print(self.__amount_players)
-
         choosing_order_normal = list(range(0, self.__amount_players))
-        choosing_order = choosing_order_normal[index_king:] + choosing_order_normal[:index_king]
-        print(choosing_order)
+        choosing_order = choosing_order_normal[current_king.index:] + choosing_order_normal[:current_king.index]
 
-        # let king pick first
+        # distribute character(s)
+        for index in range(self.__characters_per_player):  # 2-3 players allows more characters per player
+            for index_choosing_order in choosing_order:  # let each player pick (king starts)
+                print("Hello player ", index_choosing_order + 1)
+                print("Characters the players can choose from:")
+                for character in self.__deck_characters:
+                    pprint(character.info)
 
-        order_number = int(input("Pick a character for this round by entering the order number: "))
+                order_number = int(input("Pick a character for this round by entering the order number: "))
 
-        index_card = 0
-        for index in range(len(self.__deck_characters)):
-            if self.__deck_characters[index].order == order_number:
-                index_card = index
+                index_character = self.__get_index_character(order_number)
 
-        drawn_card = self.draw_card_deck_characters(index_card)
-        pprint(drawn_card.info)
+                drawn_card = self.draw_card_deck_characters(index_character)
 
-        # let other players pick
-        print("Characters the players can choose from:")
-        for character in self.__deck_characters:
-            pprint(character.info)
+                self.__players[index_choosing_order].character.append(drawn_card)
 
-        # if players can have more characters, let them pick again
-
-        pass
+    def remove_character_per_player(self):
+        for player in self.__players:
+            player.character = []
