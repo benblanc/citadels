@@ -2,6 +2,8 @@ import random
 
 from pprint import pprint
 
+from copy import deepcopy
+
 from classes import player
 
 
@@ -212,17 +214,20 @@ class ClassGame:
 
     def set_character_per_player(self):
         # prepare character picking
-        self.__deck_characters, characters_removed = self.__prepare_pickable_characters()
+        self.__deck_characters, self.__removed_characters = self.__prepare_pickable_characters()
 
         # sort lists with remaining characters
-        self.__deck_characters = sorted(self.__deck_characters, key=lambda x: x.order, reverse=True)
+        self.__deck_characters = sorted(self.__deck_characters, key=lambda x: x.order, reverse=False)
 
         # sort list with removed characters
-        characters_removed = sorted(self.__deck_characters, key=lambda x: x.order, reverse=True)
+        self.__removed_characters = sorted(self.__removed_characters, key=lambda x: x.order, reverse=False)
+
+        # set possible characters
+        self.__possible_characters = deepcopy(self.__deck_characters)
 
         print("Characters removed for this round:")
-        for character in characters_removed:
-            pprint(character.info)
+        for character in self.__removed_characters:
+            print("%s) %s" % (character.order, character.name))
         print("=================================================================")
 
         # check who is king at the moment
@@ -238,7 +243,7 @@ class ClassGame:
                 print("Hello player ", index_choosing_order + 1)
                 print("Characters the players can choose from:")
                 for character in self.__deck_characters:
-                    pprint(character.info)
+                    print("%s) %s" % (character.order, character.name))
 
                 order_number = int(input("Pick a character for this round by entering the order number: "))
 
@@ -355,11 +360,17 @@ class ClassGame:
                 print("You use your character's ability.")
 
                 if character.order == 1:
-                    print("Which character do you want to kill?")
-                    for index in range(len(self.__deck_characters)):
-                        print("%s) %s" % (index + 1, player.cards[index].name))
+                    # TODO: fix error where you are currently do not have the correct districts in hand (other player's)
+                    # TODO: figure out how to set assassinated_flag since player can have 2 characters
 
-                    input_build = int(input("Your choice: ")) - 1
+                    # print("Which character do you want to kill?")
+                    # for index in range(len(self.__possible_characters)):
+                    #     print("%s) %s" % (index + 1, self.__possible_characters[index].name))
+                    #
+                    # input_build = int(input("Your choice: ")) - 1
+                    #
+                    # print(input_build)
+                    pass
 
                 elif character.order == 2:
                     pass

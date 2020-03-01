@@ -82,6 +82,10 @@ if __name__ == '__main__':
 
             game_object.deck_characters = deepcopy(deck_characters)  # reset deck characters
 
+            game_object.removed_characters = []  # reset removed characters for this round
+
+            game_object.possible_characters = []  # reset possible characters for this round
+
             game_object.round += 1  # increase round counter
 
     except Exception:
