@@ -1,5 +1,7 @@
 import random
 
+from pprint import pprint
+
 from classes import player
 
 
@@ -22,6 +24,11 @@ class ClassGame:
         self.__deck_characters = []
         self.__deck_districts = []
         self.__discard_pile = []
+
+        self.__eight_districts_built = False
+        self.__round = 1
+        self.__possible_characters = []
+        self.__removed_characters = []
 
     @property
     def settings(self):
@@ -77,13 +84,45 @@ class ClassGame:
     def discard_pile(self, value):
         self.__discard_pile = value
 
+    @property
+    def eight_districts_built(self):
+        return self.__eight_districts_built
+
+    @eight_districts_built.setter
+    def eight_districts_built(self, value):
+        self.__eight_districts_built = value
+
+    @property
+    def round(self):
+        return self.__round
+
+    @round.setter
+    def round(self, value):
+        self.__round = value
+
+    @property
+    def possible_characters(self):
+        return self.__possible_characters
+
+    @possible_characters.setter
+    def possible_characters(self, value):
+        self.__possible_characters = value
+
+    @property
+    def removed_characters(self):
+        return self.__removed_characters
+
+    @removed_characters.setter
+    def removed_characters(self, value):
+        self.__removed_characters = value
+
     def create_players(self):
         for index in range(self.__amount_players):
             self.__players.append(player.ClassPlayer(index=index, name="Player %s" % (index + 1)))
 
         # randomly choose a king
         index_king = random.randint(0, self.__amount_players - 1)
-        self.__players[index_king].flag_king = True
+        self.__players[index_king].flag_king = True  # set player is king flag
 
     def set_unused_cards_per_player(self):
         if self.__amount_players == 4:
@@ -109,7 +148,7 @@ class ClassGame:
             if cards_in_deck > 1:
                 drawn_card = deck.pop(card_index)
 
-            else:  # last car in deck
+            else:  # last card in deck
                 drawn_card = deck.pop(0)
 
             return deck, drawn_card
@@ -172,14 +211,19 @@ class ClassGame:
                 return index_character  # return character index
 
     def set_character_per_player(self):
-        from pprint import pprint
-
         # prepare character picking
         self.__deck_characters, characters_removed = self.__prepare_pickable_characters()
+
+        # sort lists with remaining characters
+        self.__deck_characters = sorted(self.__deck_characters, key=lambda x: x.order, reverse=True)
+
+        # sort list with removed characters
+        characters_removed = sorted(self.__deck_characters, key=lambda x: x.order, reverse=True)
 
         print("Characters removed for this round:")
         for character in characters_removed:
             pprint(character.info)
+        print("=================================================================")
 
         # check who is king at the moment
         current_king = list(filter(lambda x: x.flag_king == True, self.__players))[0]
@@ -204,6 +248,152 @@ class ClassGame:
 
                 self.__players[index_choosing_order].character.append(drawn_card)
 
+                print("=================================================================")
+
     def remove_character_per_player(self):
         for player in self.__players:
             player.character = []
+
+    def use_character_effect(self):
+        pass
+
+    def start_player_turn(self, player_index, character):
+
+        player = self.__players[player_index]
+
+        # income phase
+        print("-------------- INCOME PHASE --------------")
+
+        input_income = None
+        input_income_possible = [1, 2]
+
+        while input_income not in input_income_possible:
+            print("Hello, %s! What will you take as your income?" % player.name)
+            print("1) Take 2 coins\n"
+                  "2) Draw 2 district cards, choose one and discard the other")
+            input_income = int(input("Your choice: "))
+
+            if input_income == 1:
+                player.coins += 2  # increase coins by 2
+
+            elif input_income == 2:
+                drawn_cards = []
+
+                for index in range(2):  # draw 2 cards
+                    drawn_cards.append(self.draw_card_deck_districts())
+
+                print("Drawn cards:")
+                for card in drawn_cards:
+                    pprint(card.info)
+
+                input_drawn_district = None
+                input_drawn_district_possible = [1, 2]
+
+                while input_drawn_district not in input_drawn_district_possible:
+                    print("Which of these two cards will you keep?")
+                    print("1) First card\n"
+                          "2) Second card")
+                    input_drawn_district = int(input("Your choice: "))
+
+                    chosen_card = drawn_cards.pop(input_drawn_district - 1)
+
+                    player.cards.append(chosen_card)  # add chosen card to hand
+
+                    self.__discard_pile.append(drawn_cards[0])  # add other card to discard pile
+
+                # print("cards left in deck districts: %s" % len(self.__deck_districts))
+                # print("cards in discard pile: %s" % len(self.__discard_pile))
+
+        # print("-----------------------------------------------------------------")
+        # pprint(self.__players[player_index].info)
+        #
+        # for card in self.__players[player_index].cards:
+        #     pprint(card.info)
+        #
+        # print("-----------------------------------------------------------------")
+        #
+        # for card in self.__discard_pile:
+        #     pprint(card.info)
+
+        # main phase
+        print("-------------- MAIN PHASE --------------")
+
+        while True:
+            print("What will you do during your turn?")
+            print("1) Build a district\n"
+                  "2) Use character's ability\n"
+                  "3) Show player info\n"
+                  "4) End turn")
+            input_main = int(input("Your choice: "))
+
+            if input_main == 1:
+                while not player.flag_built:  # while the player has not built a districtl
+                    print("Which of these districts in your hand will you build?")
+                    print("0) Nevermind, I do not want to build a district")
+                    for index in range(len(player.cards)):
+                        print("%s) %s" % (index + 1, player.cards[index].name))
+                        pprint(player.cards[index].info)
+
+                    input_build = int(input("Your choice: ")) - 1
+
+                    if input_build != -1:  # player wants to build
+
+                        if player.coins < player.cards[input_build].coins:  # if player has not enough coins
+                            print("You do not have enough coins to build this district.")
+
+                        else:  # player has enough coins
+                            district = player.cards.pop(input_build)  # remove card from hand
+                            player.buildings.append(district)  # add to districts built
+                            player.coins -= district.coins  # remove coins from player
+                            player.flag_built = True  # set player has built flag
+                            break
+
+                    else:  # player does not want to build
+                        break
+
+            elif input_main == 2:
+                print("You use your character's ability.")
+
+                if character.order == 1:
+                    print("Which character do you want to kill?")
+                    for index in range(len(self.__deck_characters)):
+                        print("%s) %s" % (index + 1, player.cards[index].name))
+
+                    input_build = int(input("Your choice: ")) - 1
+
+                elif character.order == 2:
+                    pass
+
+                elif character.order == 3:
+                    pass
+
+                elif character.order == 4:
+                    pass
+
+                elif character.order == 5:
+                    pass
+
+                elif character.order == 6:
+                    pass
+
+                elif character.order == 7:
+                    pass
+
+                elif character.order == 8:
+                    pass
+
+            elif input_main == 3:
+                print("Here is the info for each player.")
+                for player in self.players:
+                    pprint(player.info)
+                    print("----------------------------------------------")
+
+            elif input_main == 4:
+                player.flag_built = False  # reset player has built flag
+                print("You end your turn.")
+                break
+
+        # end phase
+        print("-------------- END PHASE --------------")
+
+        print("=================================================================")

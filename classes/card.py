@@ -6,6 +6,9 @@ class ClassDistrict:
         self.__value = value
         self.__effect = effect
 
+    def __eq__(self, other):  # override default equals behavior
+        return self.__name == other.__name and self.__color == other.__color and self.__coins == other.__coins and self.__value == other.__value and self.__effect == other.__effect
+
     @property
     def name(self):
         return self.__name
@@ -44,6 +47,9 @@ class ClassCharacter:
         self.__order = order
         self.__name = name
         self.__effect = effect
+
+    def __eq__(self, other):  # override default equals behavior
+        return self.__order == other.__order and self.__name == other.__name and self.__effect == other.__effect
 
     @property
     def order(self):
@@ -133,15 +139,26 @@ class ClassCard:
         return districts
 
     def get_characters(self):
+        # characters = [
+        #     ClassCharacter(1, "Assassin", None),
+        #     ClassCharacter(2, "Thief", None),
+        #     ClassCharacter(3, "Magician", None),
+        #     ClassCharacter(4, "King", None),
+        #     ClassCharacter(5, "Bishop", None),
+        #     ClassCharacter(6, "Merchant", None),
+        #     ClassCharacter(7, "Architect", None),
+        #     ClassCharacter(8, "Warlord", None)
+        # ]
+
         characters = [
-            ClassCharacter(1, "Assassin", None),
-            ClassCharacter(2, "Thief", None),
-            ClassCharacter(3, "Magician", None),
-            ClassCharacter(4, "King", None),
-            ClassCharacter(5, "Bishop", None),
-            ClassCharacter(6, "Merchant", None),
-            ClassCharacter(7, "Architect", None),
-            ClassCharacter(8, "Warlord", None)
+            ClassCharacter(1, "Assassin", "Kill another character. The killed character's turn is skipped."),
+            ClassCharacter(2, "Thief", "Steal all coins from another character at the beginning the turn."),
+            ClassCharacter(3, "Magician", "Trade all district in your hand with another player or discard districts in your hand and draw the same amount."),
+            ClassCharacter(4, "King", "Get king status. Start choosing a character next round. Get coins for each yellow district you have built."),
+            ClassCharacter(5, "Bishop", "Warlord cannot destroy your buildings. Get coins for each blue district you have built."),
+            ClassCharacter(6, "Merchant", "Get one coin. Get coins for each green district you have built."),
+            ClassCharacter(7, "Architect", "Can build up to three districts. Draw two district cards."),
+            ClassCharacter(8, "Warlord", "Destroy one building of another character by paying one less coin than what was paid. Get coins for each red district you have built.")
         ]
 
         return characters

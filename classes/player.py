@@ -1,5 +1,5 @@
 class ClassPlayer:
-    def __init__(self, index=0, name="", coins=0, character=None, cards=None, buildings=None, flag_king=False, flag_assassinated=False, flag_stolen=False, flag_protected=False):
+    def __init__(self, index=0, name="", coins=0, character=None, cards=None, buildings=None, flag_king=False, flag_assassinated=False, flag_stolen=False, flag_protected=False, flag_built=False):
         if character is None:
             character = []
 
@@ -19,6 +19,7 @@ class ClassPlayer:
         self.__flag_assassinated = flag_assassinated  # is player assassinated
         self.__flag_robbed = flag_stolen  # is player robbed
         self.__flag_protected = flag_protected  # is player protected from warlord
+        self.__flag_built = flag_built  # has the player built a district this turn
 
     @property
     def index(self):
@@ -97,18 +98,40 @@ class ClassPlayer:
         self.__flag_protected = value
 
     @property
+    def flag_built(self):
+        return self.__flag_built
+
+    @flag_built.setter
+    def flag_built(self, value):
+        self.__flag_built = value
+
+    @property
     def info(self):
+
+        character = []
+        for item in self.__character:
+            character.append(item.info)
+
+        cards = []
+        for item in self.__cards:
+            cards.append(item.info)
+
+        buildings = []
+        for item in self.__buildings:
+            buildings.append(item.info)
+
         info = {
             "index": self.__index,
             "name": self.__name,
             "coins": self.__coins,
-            "character": self.__character,
-            "cards": self.__cards,
-            "buildings": self.__buildings,
+            "character": character,
+            "cards": cards,
+            "buildings": buildings,
             "flag_king": self.__flag_king,
             "flag_assassinated": self.__flag_assassinated,
             "flag_stolen": self.__flag_robbed,
-            "flag_protected": self.__flag_protected
+            "flag_protected": self.__flag_protected,
+            "flag_built": self.__flag_built
         }
 
         return info
